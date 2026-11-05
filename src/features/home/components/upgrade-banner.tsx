@@ -19,7 +19,6 @@ export function UpgradeBanner({ onUpgrade }: { onUpgrade: () => void }) {
 
 const styles = StyleSheet.create({
   banner: {
-    width: 399,
     paddingHorizontal: 22,
     paddingVertical: 29,
     borderRadius: 15,
@@ -29,7 +28,9 @@ const styles = StyleSheet.create({
     ...purpleGradient(105.8),
   },
   copy: {
-    width: 196,
+    flex: 1,
+    maxWidth: 196,
+    marginRight: 12,
     gap: 2,
   },
   title: {

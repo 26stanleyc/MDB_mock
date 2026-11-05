@@ -15,7 +15,6 @@ export function EmptyForms() {
 
 const styles = StyleSheet.create({
   card: {
-    width: 399,
     height: 221,
     paddingTop: 27,
     borderRadius: 15,
@@ -36,8 +35,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   subtitle: {
-    width: 345,
     marginTop: 16,
+    marginHorizontal: 27,
     color: Palette.black,
     opacity: 0.42,
     fontSize: 15,

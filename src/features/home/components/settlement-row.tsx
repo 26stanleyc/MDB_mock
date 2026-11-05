@@ -36,7 +36,6 @@ export function SettlementRow({ settlement, onOpen }: SettlementRowProps) {
 
 const styles = StyleSheet.create({
   row: {
-    width: 399,
     height: 79,
     paddingHorizontal: 19,
     borderRadius: 15,

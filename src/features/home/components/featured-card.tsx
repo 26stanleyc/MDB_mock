@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { EligibilityIcon } from '@/components/ui/eligibility-badge';
 import { Palette } from '@/constants/theme';
@@ -13,10 +13,12 @@ type FeaturedCardProps = {
 
 export function FeaturedCard({ settlement, onOpen }: FeaturedCardProps) {
   const progress = settlement.claimsFiled / settlement.claimsTotal;
+  // Figma's 375, narrowed on smaller phones so the next card still peeks in.
+  const width = Math.min(375, useWindowDimensions().width - 64);
 
   return (
     // No button role here: the Claim button inside is the accessible button (web can't nest them).
-    <Pressable onPress={onOpen} style={styles.card}>
+    <Pressable onPress={onOpen} style={[styles.card, { width }]}>
       <View style={styles.top}>
         <Image
           source={require('@/assets/images/home/settlement-thumb.png')}
@@ -48,7 +50,6 @@ export function FeaturedCard({ settlement, onOpen }: FeaturedCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    width: 375,
     height: 132,
     paddingHorizontal: 23,
     paddingTop: 22,

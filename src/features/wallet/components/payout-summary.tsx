@@ -44,7 +44,6 @@ function Stat({ label, value }: { label: string; value: number }) {
 
 const styles = StyleSheet.create({
   card: {
-    width: 399,
     paddingHorizontal: 29,
     paddingVertical: 25,
     borderRadius: 15,

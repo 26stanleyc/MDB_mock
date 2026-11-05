@@ -85,13 +85,13 @@ const styles = StyleSheet.create({
     marginTop: 18,
     zIndex: 1,
   },
+  // Side margins instead of Figma's fixed 399 width, so cards fit narrower phones.
   content: {
-    alignItems: 'center',
     paddingTop: 25,
+    paddingHorizontal: 20,
     paddingBottom: 24,
   },
   section: {
-    width: 399,
     marginTop: 20,
   },
   sectionTitle: {

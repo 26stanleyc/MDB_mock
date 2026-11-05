@@ -6,12 +6,17 @@ type FilterChipsProps = {
   options: string[];
   selected: string;
   onSelect: (option: string) => void;
+  /** Side margin inside the scroll area, so chips scroll all the way to the screen edge. */
+  inset: number;
 };
 
 /** Horizontally scrolling row of pill filters; one is selected at a time. */
-export function FilterChips({ options, selected, onSelect }: FilterChipsProps) {
+export function FilterChips({ options, selected, onSelect, inset }: FilterChipsProps) {
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={[styles.row, { paddingHorizontal: inset }]}>
       {options.map((option) => {
         const isSelected = option === selected;
         return (
@@ -32,7 +37,6 @@ export function FilterChips({ options, selected, onSelect }: FilterChipsProps) {
 const styles = StyleSheet.create({
   row: {
     gap: 6,
-    paddingRight: 21,
   },
   chip: {
     height: 41,

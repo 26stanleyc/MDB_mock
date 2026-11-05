@@ -30,7 +30,12 @@ export default function FormsScreen() {
         ) : (
           <>
             <View style={styles.chips}>
-              <FilterChips options={STATUS_FILTERS} selected={status} onSelect={setStatus} />
+              <FilterChips
+                options={STATUS_FILTERS}
+                selected={status}
+                onSelect={setStatus}
+                inset={22}
+              />
             </View>
             <View style={styles.list}>
               {forms.map((form) => (
@@ -79,18 +84,17 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: 24,
   },
+  // Side margins instead of Figma's fixed 399 width, so rows fit narrower phones.
   empty: {
-    alignItems: 'center',
     marginTop: 25,
+    marginHorizontal: 20,
   },
   chips: {
     marginTop: 17,
-    paddingLeft: 22,
   },
   list: {
-    width: 399,
     marginTop: 22,
-    marginLeft: 19,
+    marginHorizontal: 19,
     gap: 12,
   },
 });

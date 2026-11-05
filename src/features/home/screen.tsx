@@ -71,10 +71,17 @@ export default function HomeScreen() {
           ))}
         </ScrollView>
 
-        <UpgradeBanner onUpgrade={() => router.push('/onboarding/paywall')} />
+        <View style={styles.inset}>
+          <UpgradeBanner onUpgrade={() => router.push('/onboarding/paywall')} />
+        </View>
 
         <View style={styles.chips}>
-          <FilterChips options={CATEGORIES} selected={category} onSelect={setCategory} />
+          <FilterChips
+            options={CATEGORIES}
+            selected={category}
+            onSelect={setCategory}
+            inset={21}
+          />
         </View>
 
         <View style={styles.list}>
@@ -121,12 +128,18 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     letterSpacing: 0,
   },
+  // Side margins live on each section (not the scroll content) so the carousel and
+  // chips can scroll edge to edge, and cards stretch to fit narrower phones.
   content: {
     paddingTop: 18,
-    paddingLeft: 21,
     paddingBottom: 24,
   },
+  inset: {
+    marginLeft: 21,
+    marginRight: 20,
+  },
   featuredHeader: {
+    marginLeft: 21,
     marginRight: 16,
     flexDirection: 'row',
     alignItems: 'center',
@@ -160,7 +173,7 @@ const styles = StyleSheet.create({
   carouselContent: {
     gap: 17,
     paddingVertical: 4,
-    paddingLeft: 1,
+    paddingLeft: 22,
     paddingRight: 21,
   },
   chips: {
@@ -168,6 +181,8 @@ const styles = StyleSheet.create({
   },
   list: {
     marginTop: 16,
+    marginLeft: 21,
+    marginRight: 20,
     gap: 17,
   },
 });

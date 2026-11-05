@@ -16,11 +16,16 @@ export function FormRow({ form }: { form: SavedForm }) {
     <View style={styles.row}>
       <Image source={require('@/assets/images/icons/form-doc.svg')} style={styles.icon} />
       <View style={styles.info}>
-        <Text style={styles.name}>{form.name}</Text>
+        {/* The pill shares the name's line only, so the date below gets the full width. */}
+        <View style={styles.top}>
+          <Text style={styles.name} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+            {form.name}
+          </Text>
+          <View style={[styles.status, { backgroundColor: STATUS_COLORS[form.status] }]}>
+            <Text style={styles.statusText}>{form.status}</Text>
+          </View>
+        </View>
         <Text style={styles.submitted}>Submitted: {form.submitted}</Text>
-      </View>
-      <View style={[styles.status, { backgroundColor: STATUS_COLORS[form.status] }]}>
-        <Text style={styles.statusText}>{form.status}</Text>
       </View>
     </View>
   );
@@ -28,10 +33,10 @@ export function FormRow({ form }: { form: SavedForm }) {
 
 const styles = StyleSheet.create({
   row: {
-    height: 80,
+    minHeight: 80,
     paddingLeft: 17,
     paddingRight: 18,
-    paddingTop: 16,
+    paddingVertical: 16,
     borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -46,7 +51,13 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 13,
   },
+  top: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
   name: {
+    flex: 1,
     color: Palette.black,
     fontSize: 20,
     lineHeight: 28,
