@@ -3,8 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { EligibilityBadge } from '@/components/ui/eligibility-badge';
 import { Palette } from '@/constants/theme';
-
-import type { Settlement } from '../api';
+import { dueLabel, eligibilityOf, type Settlement } from '@/lib/settlements';
 
 type SettlementRowProps = {
   settlement: Settlement;
@@ -12,20 +11,26 @@ type SettlementRowProps = {
 };
 
 export function SettlementRow({ settlement, onOpen }: SettlementRowProps) {
+  const eligibility = eligibilityOf(settlement);
   return (
     // No button role here: the Claim button inside is the accessible button (web can't nest them).
     <Pressable onPress={onOpen} style={styles.row}>
       <Image
-        source={require('@/assets/images/home/settlement-thumb.png')}
+        source={settlement.image_url ?? require('@/assets/images/home/settlement-thumb.png')}
         style={styles.thumb}
         contentFit="cover"
       />
       <View style={styles.info}>
         <View style={styles.amountRow}>
-          <Text style={styles.amount}>{settlement.amount}</Text>
-          {settlement.eligibility && <EligibilityBadge kind={settlement.eligibility} />}
+          <Text style={styles.amount} numberOfLines={1}>
+            {settlement.payout}
+          </Text>
+          {eligibility && <EligibilityBadge kind={eligibility} />}
         </View>
-        <Text style={styles.due}>{settlement.due}</Text>
+        <Text style={styles.brand} numberOfLines={1}>
+          {settlement.brand}
+        </Text>
+        <Text style={styles.due}>{dueLabel(settlement.deadline)}</Text>
       </View>
       <Pressable accessibilityRole="button" onPress={onOpen} style={styles.claim}>
         <Text style={styles.claimText}>Claim</Text>
@@ -36,7 +41,8 @@ export function SettlementRow({ settlement, onOpen }: SettlementRowProps) {
 
 const styles = StyleSheet.create({
   row: {
-    height: 79,
+    minHeight: 79,
+    paddingVertical: 12,
     paddingHorizontal: 19,
     borderRadius: 15,
     flexDirection: 'row',
@@ -52,6 +58,7 @@ const styles = StyleSheet.create({
   info: {
     flex: 1,
     marginLeft: 15,
+    marginRight: 10,
   },
   amountRow: {
     flexDirection: 'row',
@@ -59,11 +66,18 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   amount: {
+    flexShrink: 1,
     color: Palette.black,
     fontSize: 20,
     lineHeight: 28,
     letterSpacing: 0.15,
     fontWeight: '700',
+  },
+  brand: {
+    color: Palette.black,
+    fontSize: 15,
+    lineHeight: 18,
+    fontWeight: '600',
   },
   due: {
     marginTop: 2,

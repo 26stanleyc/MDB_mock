@@ -6,9 +6,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppHeader } from '@/components/ui/app-header';
 import { FilterChips } from '@/components/ui/filter-chips';
 import { InfoPopup } from '@/components/ui/info-popup';
+import { ErrorState, LoadingState, MessageState } from '@/components/ui/request-state';
 import { Palette } from '@/constants/theme';
+import { useRequest } from '@/lib/use-request';
 
-import { CATEGORIES, FEATURED, SETTLEMENTS } from './api';
+import { CATEGORIES, fetchHome, inCategory } from './api';
 import { EligibilityIcon } from '@/components/ui/eligibility-badge';
 import { FeaturedCard } from './components/featured-card';
 import { HomeMenu } from './components/home-menu';
@@ -24,9 +26,10 @@ export default function HomeScreen() {
   const [category, setCategory] = useState('All');
   const [menuOpen, setMenuOpen] = useState(false);
   const [howItWorksOpen, setHowItWorksOpen] = useState(false);
+  const home = useRequest(fetchHome);
 
-  const settlements =
-    category === 'All' ? SETTLEMENTS : SETTLEMENTS.filter((s) => s.category === category);
+  const featured = home.data?.featured ?? [];
+  const settlements = home.data?.settlements.filter((s) => inCategory(s, category)) ?? [];
 
   function openSettlement(id: string) {
     router.push({ pathname: '/settlement/[id]', params: { id } });
@@ -42,34 +45,38 @@ export default function HomeScreen() {
         />
       </View>
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.featuredHeader}>
-          <Text style={styles.sectionTitle}>Featured</Text>
-          <View style={styles.legend}>
-            <View style={styles.legendItem}>
-              <EligibilityIcon kind="noProof" size={23} iconSize={13} />
-              <Text style={styles.legendText}>No Proof</Text>
+        {featured.length > 0 && (
+          <>
+            <View style={styles.featuredHeader}>
+              <Text style={styles.sectionTitle}>Featured</Text>
+              <View style={styles.legend}>
+                <View style={styles.legendItem}>
+                  <EligibilityIcon kind="noProof" size={23} iconSize={13} />
+                  <Text style={styles.legendText}>No Proof</Text>
+                </View>
+                <View style={styles.legendItem}>
+                  <EligibilityIcon kind="uncapped" size={23} iconSize={15} />
+                  <Text style={styles.legendText}>Uncapped</Text>
+                </View>
+              </View>
             </View>
-            <View style={styles.legendItem}>
-              <EligibilityIcon kind="uncapped" size={23} iconSize={15} />
-              <Text style={styles.legendText}>Uncapped</Text>
-            </View>
-          </View>
-        </View>
 
-        {/* Vertical padding keeps the card shadows from being clipped by the scroll view. */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.carousel}
-          contentContainerStyle={styles.carouselContent}>
-          {FEATURED.map((settlement) => (
-            <FeaturedCard
-              key={settlement.id}
-              settlement={settlement}
-              onOpen={() => openSettlement(settlement.id)}
-            />
-          ))}
-        </ScrollView>
+            {/* Vertical padding keeps the card shadows from being clipped by the scroll view. */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.carousel}
+              contentContainerStyle={styles.carouselContent}>
+              {featured.map((settlement) => (
+                <FeaturedCard
+                  key={settlement.id}
+                  settlement={settlement}
+                  onOpen={() => openSettlement(settlement.id)}
+                />
+              ))}
+            </ScrollView>
+          </>
+        )}
 
         <View style={styles.inset}>
           <UpgradeBanner onUpgrade={() => router.push('/onboarding/paywall')} />
@@ -85,13 +92,26 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.list}>
-          {settlements.map((settlement) => (
-            <SettlementRow
-              key={settlement.id}
-              settlement={settlement}
-              onOpen={() => openSettlement(settlement.id)}
-            />
-          ))}
+          {home.data ? (
+            settlements.length > 0 ? (
+              settlements.map((settlement) => (
+                <SettlementRow
+                  key={settlement.id}
+                  settlement={settlement}
+                  onOpen={() => openSettlement(settlement.id)}
+                />
+              ))
+            ) : (
+              <MessageState
+                title="No settlements here yet"
+                subtitle="We check for new settlements every day."
+              />
+            )
+          ) : home.error ? (
+            <ErrorState onRetry={home.reload} />
+          ) : (
+            <LoadingState />
+          )}
         </View>
       </ScrollView>
 

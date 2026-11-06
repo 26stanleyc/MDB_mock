@@ -1,5 +1,5 @@
-// shortcut: mock data copied from Figma until the backend exists.
-// Empty the list to see the "No saved forms" state.
+import type { ClaimStatus, MyClaim } from '@/lib/claims';
+import { formatDate, shortTitle } from '@/lib/settlements';
 
 export type FormStatus = 'Pending' | 'Payment Sent' | 'Case Closed';
 
@@ -12,8 +12,18 @@ export type SavedForm = {
 
 export const STATUS_FILTERS = ['All', 'Pending', 'Payment Sent', 'Case Closed'];
 
-export const FORMS: SavedForm[] = [
-  { id: 'f1', name: 'Apple Data Breach', submitted: 'Feb 14, 2026', status: 'Pending' },
-  { id: 'f2', name: 'Facebook Retail', submitted: 'Jan 12, 2025', status: 'Payment Sent' },
-  { id: 'f3', name: 'Tesla Emissions', submitted: 'Jan 12, 2025', status: 'Case Closed' },
-];
+const STATUS_LABELS: Record<ClaimStatus, FormStatus> = {
+  pending: 'Pending',
+  payment_sent: 'Payment Sent',
+  case_closed: 'Case Closed',
+};
+
+/** Each claim is shown as the claim form the user started for it. */
+export function toForm(claim: MyClaim): SavedForm {
+  return {
+    id: claim.id,
+    name: shortTitle(claim.settlement),
+    submitted: formatDate(claim.created_at),
+    status: STATUS_LABELS[claim.status],
+  };
+}

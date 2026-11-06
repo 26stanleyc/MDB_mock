@@ -2,16 +2,26 @@ import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Palette } from '@/constants/theme';
+import type { MyClaim } from '@/lib/claims';
+import { dueLabel } from '@/lib/settlements';
 
-import type { Claim } from '../api';
-
-export function ClaimRow({ claim }: { claim: Claim }) {
+export function ClaimRow({ claim }: { claim: MyClaim }) {
+  const { settlement } = claim;
   return (
     <View style={styles.row}>
-      <Image source={claim.logo} style={styles.logo} accessibilityLabel={claim.brand} />
+      <Image
+        source={settlement.image_url ?? require('@/assets/images/home/settlement-thumb.png')}
+        style={styles.logo}
+        accessibilityLabel={settlement.brand}
+      />
       <View style={styles.info}>
-        <Text style={styles.amount}>{claim.amount}</Text>
-        <Text style={styles.due}>{claim.due}</Text>
+        <Text style={styles.amount} numberOfLines={1}>
+          {settlement.payout}
+        </Text>
+        <Text style={styles.brand} numberOfLines={1}>
+          {settlement.brand}
+        </Text>
+        <Text style={styles.due}>{dueLabel(settlement.deadline)}</Text>
       </View>
       <View style={styles.status}>
         <Text style={styles.statusText}>Claimed</Text>
@@ -39,6 +49,7 @@ const styles = StyleSheet.create({
   info: {
     flex: 1,
     marginLeft: 14,
+    marginRight: 10,
   },
   amount: {
     color: Palette.black,
@@ -46,6 +57,12 @@ const styles = StyleSheet.create({
     lineHeight: 28,
     letterSpacing: 0.15,
     fontWeight: '700',
+  },
+  brand: {
+    color: Palette.black,
+    fontSize: 15,
+    lineHeight: 18,
+    fontWeight: '600',
   },
   due: {
     marginTop: 2,

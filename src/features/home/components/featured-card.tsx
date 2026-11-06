@@ -3,16 +3,16 @@ import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-na
 
 import { EligibilityIcon } from '@/components/ui/eligibility-badge';
 import { Palette } from '@/constants/theme';
-
-import type { FeaturedSettlement } from '../api';
+import { dueLabel, eligibilityOf, type Settlement } from '@/lib/settlements';
 
 type FeaturedCardProps = {
-  settlement: FeaturedSettlement;
+  settlement: Settlement;
   onOpen: () => void;
 };
 
 export function FeaturedCard({ settlement, onOpen }: FeaturedCardProps) {
-  const progress = settlement.claimsFiled / settlement.claimsTotal;
+  const eligibility = eligibilityOf(settlement);
+  const progress = timeElapsed(settlement);
   // Figma's 375, narrowed on smaller phones so the next card still peeks in.
   const width = Math.min(375, useWindowDimensions().width - 64);
 
@@ -21,18 +21,20 @@ export function FeaturedCard({ settlement, onOpen }: FeaturedCardProps) {
     <Pressable onPress={onOpen} style={[styles.card, { width }]}>
       <View style={styles.top}>
         <Image
-          source={require('@/assets/images/home/settlement-thumb.png')}
+          source={settlement.image_url ?? require('@/assets/images/home/settlement-thumb.png')}
           style={styles.thumb}
           contentFit="cover"
         />
         <View style={styles.info}>
           <View style={styles.amountRow}>
-            <Text style={styles.amount}>{settlement.amount}</Text>
-            {settlement.eligibility && (
-              <EligibilityIcon kind={settlement.eligibility} size={25} iconSize={18} />
-            )}
+            <Text style={styles.amount} numberOfLines={1} adjustsFontSizeToFit>
+              {settlement.payout}
+            </Text>
+            {eligibility && <EligibilityIcon kind={eligibility} size={25} iconSize={18} />}
           </View>
-          <Text style={styles.due}>{settlement.due}</Text>
+          <Text style={styles.due} numberOfLines={1}>
+            {settlement.brand} · {dueLabel(settlement.deadline)}
+          </Text>
         </View>
         <Pressable accessibilityRole="button" onPress={onOpen} style={styles.claim}>
           <Text style={styles.claimText}>Claim</Text>
@@ -42,10 +44,19 @@ export function FeaturedCard({ settlement, onOpen }: FeaturedCardProps) {
         <View style={[styles.fill, { width: `${progress * 100}%` }]} />
       </View>
       <Text style={styles.caption}>
-        {settlement.claimsFiled} out of {settlement.claimsTotal} claims filled 🎉
+        {settlement.claim_count} {settlement.claim_count === 1 ? 'claim' : 'claims'} filed so far 🎉
       </Text>
     </Pressable>
   );
+}
+
+// The site doesn't publish a claims goal, so the bar shows how much of the claim window
+// (from when we first saw the settlement to its deadline) has passed.
+function timeElapsed({ first_seen_at, deadline }: Settlement) {
+  if (!deadline) return 0;
+  const start = new Date(first_seen_at).getTime();
+  const end = new Date(`${deadline}T23:59:59`).getTime();
+  return Math.min(1, Math.max(0, (Date.now() - start) / (end - start)));
 }
 
 const styles = StyleSheet.create({
@@ -69,6 +80,7 @@ const styles = StyleSheet.create({
   info: {
     flex: 1,
     marginLeft: 11,
+    marginRight: 10,
   },
   amountRow: {
     flexDirection: 'row',
@@ -76,6 +88,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   amount: {
+    flexShrink: 1,
     color: Palette.black,
     fontSize: 24,
     lineHeight: 28,

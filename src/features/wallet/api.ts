@@ -1,26 +1,14 @@
-import type { ImageSource } from 'expo-image';
+import type { MyClaim } from '@/lib/claims';
 
-// shortcut: mock data copied from Figma until the backend exists.
-// Empty a list to see that section's "No claims" state.
+/** Wallet numbers from the user's claims. */
+export function summarize(claims: MyClaim[]) {
+  const total = claims.reduce((sum, claim) => sum + (claim.settlement.payout_max ?? 0), 0);
+  return {
+    // Adds the top of each payout range; "Varies" payouts count as $0.
+    estimatedPayout: `$${total.toLocaleString('en-US')}`,
+    claimed: claims.length,
+    notified: claims.filter((claim) => claim.status === 'payment_sent').length,
+  };
+}
 
-export type Claim = {
-  id: string;
-  brand: string;
-  logo: ImageSource;
-  amount: string;
-  due: string;
-};
-
-const GOOGLE = require('@/assets/images/wallet/google.png');
-
-export const SUMMARY = { estimatedPayout: '$94', claimed: 3, notified: 2 };
-
-export const IN_PROGRESS: Claim[] = [
-  { id: 'c1', brand: 'Google', logo: GOOGLE, amount: '$3000', due: 'Due in 49 days' },
-  { id: 'c2', brand: 'Google', logo: GOOGLE, amount: '$3000', due: 'Due in 49 days' },
-];
-
-export const FINISHED: Claim[] = [
-  { id: 'c3', brand: 'Google', logo: GOOGLE, amount: '$3000', due: 'Due in 49 days' },
-  { id: 'c4', brand: 'Google', logo: GOOGLE, amount: '$3000', due: 'Due in 49 days' },
-];
+export const isInProgress = (claim: MyClaim) => claim.status === 'pending';

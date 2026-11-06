@@ -1,28 +1,19 @@
-import type { ImageSource } from 'expo-image';
+import { hasClaimed } from '@/lib/claims';
+import type { Settlement } from '@/lib/settlements';
+import { ensureSignedIn, supabase, unwrap } from '@/lib/supabase';
 
-import type { Eligibility } from '@/components/ui/eligibility-badge';
+/** One settlement plus whether the user already filed a claim on it. */
+export async function fetchSettlement(id: string) {
+  await ensureSignedIn();
+  const [settlement, claimed] = await Promise.all([
+    supabase.from('settlements').select('*').eq('id', id).maybeSingle(),
+    hasClaimed(id),
+  ]);
+  return { settlement: unwrap<Settlement | null>(settlement), claimed };
+}
 
-export type SettlementDetails = {
-  brand: string;
-  logo: ImageSource;
-  amount: string;
-  eligibility?: Eligibility;
-  title: string;
-  summary: string;
-  due: string;
-  description: string;
-};
-
-// shortcut: every settlement opens Figma's Instagram example until the backend exists.
-export const EXAMPLE_SETTLEMENT: SettlementDetails = {
-  brand: 'Instagram',
-  logo: require('@/assets/images/wallet/google.png'),
-  amount: '$1,000',
-  eligibility: 'uncapped',
-  title: 'Instagram Social Media Addiction Arbitration Claims',
-  summary:
-    'You may get a cut of a $1M settlement over potential arbitration claims for harms from instagram’s allegedly addictive design..',
-  due: 'Due in 576 days',
-  // Figma has the "Description" heading but no text yet.
-  description: 'Full details about who qualifies and how to file will appear here.',
-};
+/** '$5 - $10' → 'claim $5 - $10', 'Up to $6,000' → 'claim up to $6,000', 'Varies' → 'payout varies'. */
+export function payoutHeadline(payout: string) {
+  if (!/\d/.test(payout)) return 'payout varies';
+  return `claim ${payout.charAt(0).toLowerCase()}${payout.slice(1)}`;
+}

@@ -1,13 +1,15 @@
+import '@/lib/local-storage';
 import { router } from 'expo-router';
 
-// shortcut: kept in memory, so onboarding shows on every launch until we add storage.
-let finished = false;
+// Saved on the device, so onboarding only shows on the first launch.
+const KEY = 'onboarding-finished';
 
 export function hasFinishedOnboarding() {
-  return finished;
+  // `?.` because web's server render runs in Node, which has no localStorage.
+  return globalThis.localStorage?.getItem(KEY) === 'true';
 }
 
 export function finishOnboarding() {
-  finished = true;
+  localStorage.setItem(KEY, 'true');
   router.replace('/');
 }

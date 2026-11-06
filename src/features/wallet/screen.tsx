@@ -4,9 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppHeader } from '@/components/ui/app-header';
 import { InfoPopup } from '@/components/ui/info-popup';
+import { ErrorState, LoadingState } from '@/components/ui/request-state';
 import { Palette } from '@/constants/theme';
+import { type MyClaim, useMyClaims } from '@/lib/claims';
 
-import { Claim, FINISHED, IN_PROGRESS, SUMMARY } from './api';
+import { isInProgress, summarize } from './api';
 import { ClaimRow } from './components/claim-row';
 import { EmptyClaims } from './components/empty-claims';
 import { PayoutSummary } from './components/payout-summary';
@@ -18,6 +20,7 @@ const HOW_PAYOUTS_WORK = [
 
 export default function WalletScreen() {
   const [infoOpen, setInfoOpen] = useState(false);
+  const claims = useMyClaims();
 
   return (
     <SafeAreaView edges={['top']} style={styles.screen}>
@@ -25,19 +28,27 @@ export default function WalletScreen() {
         <AppHeader title="Wallet" />
       </View>
       <ScrollView contentContainerStyle={styles.content}>
-        <PayoutSummary {...SUMMARY} onInfo={() => setInfoOpen(true)} />
-        <ClaimSection
-          title="IN-PROGRESS"
-          claims={IN_PROGRESS}
-          emptyTitle="No active claims"
-          emptySubtitle="Claims you’ve submitted will appear here"
-        />
-        <ClaimSection
-          title="FINISHED"
-          claims={FINISHED}
-          emptyTitle="No completed claims"
-          emptySubtitle="Finished claims will appear here"
-        />
+        {claims.data ? (
+          <>
+            <PayoutSummary {...summarize(claims.data)} onInfo={() => setInfoOpen(true)} />
+            <ClaimSection
+              title="IN-PROGRESS"
+              claims={claims.data.filter(isInProgress)}
+              emptyTitle="No active claims"
+              emptySubtitle="Claims you’ve submitted will appear here"
+            />
+            <ClaimSection
+              title="FINISHED"
+              claims={claims.data.filter((claim) => !isInProgress(claim))}
+              emptyTitle="No completed claims"
+              emptySubtitle="Finished claims will appear here"
+            />
+          </>
+        ) : claims.error ? (
+          <ErrorState onRetry={claims.reload} />
+        ) : (
+          <LoadingState />
+        )}
       </ScrollView>
       <InfoPopup
         visible={infoOpen}
@@ -52,7 +63,7 @@ export default function WalletScreen() {
 
 type ClaimSectionProps = {
   title: string;
-  claims: Claim[];
+  claims: MyClaim[];
   emptyTitle: string;
   emptySubtitle: string;
 };

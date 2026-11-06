@@ -1,22 +1,53 @@
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
-import { Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
+import { useCallback, useState } from 'react';
+import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EligibilityBadge } from '@/components/ui/eligibility-badge';
+import { ErrorState, LoadingState, MessageState } from '@/components/ui/request-state';
 import { Palette } from '@/constants/theme';
+import { fileClaim } from '@/lib/claims';
+import { dueLabel, eligibilityOf, formatDate } from '@/lib/settlements';
+import { useRequest } from '@/lib/use-request';
 
-import { EXAMPLE_SETTLEMENT } from './api';
+import { fetchSettlement, payoutHeadline } from './api';
 
 export default function SettlementScreen() {
-  const settlement = EXAMPLE_SETTLEMENT;
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const request = useRequest(useCallback(() => fetchSettlement(id), [id]));
+  const settlement = request.data?.settlement;
+  const [filedNow, setFiledNow] = useState(false);
+  const [starting, setStarting] = useState(false);
+  const claimed = filedNow || request.data?.claimed;
+  const eligibility = settlement && eligibilityOf(settlement);
   const insets = useSafeAreaInsets();
 
   async function share() {
+    if (!settlement) return;
     try {
-      await Share.share({ message: settlement.title });
+      await Share.share({ message: `${settlement.title}: ${settlement.claim_url}` });
     } catch {
       // The browser may not support sharing; nothing else to do.
+    }
+  }
+
+  // Records the claim once, then opens the official claim form. If the user already
+  // claimed, it just reopens the form; the database rejects a second claim anyway.
+  async function start() {
+    if (!settlement || starting) return;
+    setStarting(true);
+    try {
+      if (!claimed) {
+        await fileClaim(settlement.id);
+        setFiledNow(true);
+      }
+      await WebBrowser.openBrowserAsync(settlement.claim_url);
+    } catch {
+      Alert.alert('Couldn’t start your claim', 'Check your connection and try again.');
+    } finally {
+      setStarting(false);
     }
   }
 
@@ -34,39 +65,69 @@ export default function SettlementScreen() {
         </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.hero}>
-          <Image source={settlement.logo} style={styles.logo} accessibilityLabel={settlement.brand} />
-          <Text style={styles.amount}>claim at least {settlement.amount}</Text>
-          <Text style={styles.brand}>{settlement.brand}</Text>
-        </View>
-        <View style={styles.divider} />
-        {settlement.eligibility && (
-          <View style={styles.badge}>
-            <EligibilityBadge kind={settlement.eligibility} size="large" />
-          </View>
-        )}
-        <Text style={styles.title}>{settlement.title}</Text>
-        <Text style={styles.body}>{settlement.summary}</Text>
-        <Text style={styles.heading}>Deadline to claim</Text>
-        <View style={styles.deadline}>
-          <Image source={require('@/assets/images/icons/calendar.svg')} style={styles.calendar} />
-          <Text style={styles.body}>{settlement.due}</Text>
-        </View>
-        <Text style={styles.heading}>Description</Text>
-        <Text style={[styles.body, styles.description]}>{settlement.description}</Text>
-      </ScrollView>
+      {settlement ? (
+        <>
+          <ScrollView contentContainerStyle={styles.content}>
+            <View style={styles.hero}>
+              <Image
+                source={settlement.image_url ?? require('@/assets/images/home/settlement-thumb.png')}
+                style={styles.logo}
+                accessibilityLabel={settlement.brand}
+              />
+              <Text style={styles.amount}>{payoutHeadline(settlement.payout)}</Text>
+              <Text style={styles.brand}>{settlement.brand}</Text>
+            </View>
+            <View style={styles.divider} />
+            {eligibility && (
+              <View style={styles.badge}>
+                <EligibilityBadge kind={eligibility} size="large" />
+              </View>
+            )}
+            <Text style={styles.title}>{settlement.title}</Text>
+            <Text style={styles.body}>{settlement.description}</Text>
+            <Text style={styles.heading}>Deadline to claim</Text>
+            <View style={styles.deadline}>
+              <Image source={require('@/assets/images/icons/calendar.svg')} style={styles.calendar} />
+              <Text style={styles.body}>
+                {dueLabel(settlement.deadline)}
+                {settlement.deadline && ` (${formatDate(settlement.deadline)})`}
+              </Text>
+            </View>
+            <Text style={styles.heading}>Description</Text>
+            <Text style={[styles.body, styles.description]}>
+              Payout: {settlement.payout}
+              {'\n'}Proof required:{' '}
+              {settlement.proof_required === null ? 'Not stated' : settlement.proof_required ? 'Yes' : 'No'}
+              {'\n'}Source: classaction.org
+            </Text>
+          </ScrollView>
 
-      <View style={[styles.panel, { paddingBottom: insets.bottom + 14 }]}>
-        <Pressable accessibilityRole="button" onPress={share} style={[styles.button, styles.shareButton]}>
-          <Text style={styles.shareText}>Tell your friends</Text>
-          <Image source={require('@/assets/images/icons/send.svg')} style={styles.send} />
-        </Pressable>
-        {/* shortcut: filing a claim isn't designed yet. */}
-        <Pressable accessibilityRole="button" style={[styles.button, styles.startButton]}>
-          <Text style={styles.startText}>Get Started</Text>
-        </Pressable>
-      </View>
+          <View style={[styles.panel, { paddingBottom: insets.bottom + 14 }]}>
+            <Pressable accessibilityRole="button" onPress={share} style={[styles.button, styles.shareButton]}>
+              <Text style={styles.shareText}>Tell your friends</Text>
+              <Image source={require('@/assets/images/icons/send.svg')} style={styles.send} />
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={start}
+              disabled={starting}
+              style={[styles.button, styles.startButton, starting && styles.startButtonBusy]}>
+              <Text style={styles.startText}>{claimed ? 'Claim filed · Open form' : 'Get Started'}</Text>
+            </Pressable>
+          </View>
+        </>
+      ) : request.error ? (
+        <ErrorState onRetry={request.reload} />
+      ) : request.data ? (
+        <MessageState
+          title="Settlement not found"
+          subtitle="It may have closed or been removed."
+          actionLabel="Go back"
+          onAction={() => router.back()}
+        />
+      ) : (
+        <LoadingState />
+      )}
     </SafeAreaView>
   );
 }
@@ -226,6 +287,9 @@ const styles = StyleSheet.create({
   },
   startButton: {
     backgroundColor: Palette.purple[600],
+  },
+  startButtonBusy: {
+    opacity: 0.6,
   },
   startText: {
     color: Palette.white,

@@ -3,27 +3,39 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FilterChips } from '@/components/ui/filter-chips';
+import { ErrorState, LoadingState } from '@/components/ui/request-state';
 import { Palette } from '@/constants/theme';
+import { useMyClaims } from '@/lib/claims';
 
-import { FORMS, STATUS_FILTERS } from './api';
+import { STATUS_FILTERS, toForm } from './api';
 import { EmptyForms } from './components/empty-forms';
 import { FormRow } from './components/form-row';
 
 export default function FormsScreen() {
   const [status, setStatus] = useState('All');
-  const forms = status === 'All' ? FORMS : FORMS.filter((form) => form.status === status);
+  const claims = useMyClaims();
+  const all = claims.data?.map(toForm) ?? [];
+  const forms = status === 'All' ? all : all.filter((form) => form.status === status);
 
   return (
     <SafeAreaView edges={['top']} style={styles.screen}>
       {/* Forms has its own header: title on the left, no logo, file count on the right. */}
       <View style={styles.header}>
         <Text style={styles.title}>Forms</Text>
-        <Text style={styles.count}>
-          {FORMS.length} {FORMS.length === 1 ? 'file' : 'files'}
-        </Text>
+        {claims.data && (
+          <Text style={styles.count}>
+            {all.length} {all.length === 1 ? 'file' : 'files'}
+          </Text>
+        )}
       </View>
       <ScrollView contentContainerStyle={styles.content}>
-        {FORMS.length === 0 ? (
+        {!claims.data ? (
+          claims.error ? (
+            <ErrorState onRetry={claims.reload} />
+          ) : (
+            <LoadingState />
+          )
+        ) : all.length === 0 ? (
           <View style={styles.empty}>
             <EmptyForms />
           </View>
