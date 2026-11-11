@@ -16,9 +16,9 @@ export function FormRow({ form }: { form: SavedForm }) {
     <View style={styles.row}>
       <Image source={require('@/assets/images/icons/form-doc.svg')} style={styles.icon} />
       <View style={styles.info}>
-        {/* The pill shares the name's line only, so the date below gets the full width. */}
+        {/* The pill sits beside a short name and drops below a long one, so the name isn't cut short. */}
         <View style={styles.top}>
-          <Text style={styles.name} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+          <Text style={styles.name} numberOfLines={2}>
             {form.name}
           </Text>
           <View style={[styles.status, { backgroundColor: STATUS_COLORS[form.status] }]}>
@@ -53,11 +53,13 @@ const styles = StyleSheet.create({
   },
   top: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'flex-start',
-    gap: 8,
+    columnGap: 8,
+    rowGap: 4,
   },
   name: {
-    flex: 1,
+    flexShrink: 1,
     color: Palette.black,
     fontSize: 20,
     lineHeight: 28,

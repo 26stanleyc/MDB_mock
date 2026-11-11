@@ -60,10 +60,13 @@ const styles = StyleSheet.create({
     marginLeft: 15,
     marginRight: 10,
   },
+  // The badge drops below the amount when both don't fit, instead of squeezing the amount.
   amountRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
-    gap: 6,
+    columnGap: 6,
+    rowGap: 2,
   },
   amount: {
     flexShrink: 1,

@@ -32,7 +32,7 @@ export function FeaturedCard({ settlement, onOpen }: FeaturedCardProps) {
             </Text>
             {eligibility && <EligibilityIcon kind={eligibility} size={25} iconSize={18} />}
           </View>
-          <Text style={styles.due} numberOfLines={1}>
+          <Text style={styles.due} numberOfLines={2}>
             {settlement.brand} · {dueLabel(settlement.deadline)}
           </Text>
         </View>
@@ -61,9 +61,10 @@ function timeElapsed({ first_seen_at, deadline }: Settlement) {
 
 const styles = StyleSheet.create({
   card: {
-    height: 132,
+    minHeight: 132,
     paddingHorizontal: 23,
     paddingTop: 22,
+    paddingBottom: 10,
     borderRadius: 15,
     backgroundColor: Palette.white,
     boxShadow: `0px 0px 4px 1px ${Palette.shadowSoft}`,

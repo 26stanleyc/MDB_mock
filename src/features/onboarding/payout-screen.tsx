@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 
 import { Palette } from '@/constants/theme';
 
@@ -22,7 +22,8 @@ export default function PayoutScreen() {
         subtitle="This will be set as the default payout method when claims are filled"
         subtitleWidth={260}
       />
-      <View style={styles.list}>
+      {/* Scrolls on shorter phones so the last option isn't hidden behind Next. */}
+      <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
         {METHODS.map((item) => (
           <Pressable
             key={item}
@@ -33,7 +34,7 @@ export default function PayoutScreen() {
             <Text style={styles.optionText}>{item}</Text>
           </Pressable>
         ))}
-      </View>
+      </ScrollView>
     </OnboardingStep>
   );
 }
@@ -42,10 +43,15 @@ const styles = StyleSheet.create({
   content: {
     justifyContent: 'flex-start',
     paddingTop: 70,
+    paddingBottom: 30,
   },
   list: {
+    flexGrow: 0,
+    flexShrink: 1,
     width: 345,
     marginTop: 48,
+  },
+  listContent: {
     gap: 20,
   },
   option: {

@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions } from 'react-native';
 
 import { ErrorState, LoadingState, MessageState } from '@/components/ui/request-state';
 import { Palette } from '@/constants/theme';
@@ -10,8 +10,13 @@ import { fetchBrands, saveBrands } from './api';
 import { OnboardingStep } from './components/onboarding-step';
 import { QuestionHeader } from './components/question-header';
 
+const GRID_GAP = 25;
+
 export default function BrandsScreen() {
   const brands = useRequest(fetchBrands);
+  // Wider than Figma's 275 so long names like "Communications" fit on one line in a tile.
+  const gridWidth = Math.min(345, useWindowDimensions().width - 40);
+  const tileWidth = (gridWidth - GRID_GAP) / 2;
   const [selected, setSelected] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -45,7 +50,7 @@ export default function BrandsScreen() {
         subtitle="Pick the ones you haven’t claimed money from yet"
         subtitleWidth={221}
       />
-      <ScrollView style={styles.grid} contentContainerStyle={styles.gridContent}>
+      <ScrollView style={[styles.grid, { width: gridWidth }]} contentContainerStyle={styles.gridContent}>
         {brands.data ? (
           brands.data.length > 0 ? (
             // shortcut: brand names stand in for Figma's "Insert Logo Here" until we have logos.
@@ -55,7 +60,11 @@ export default function BrandsScreen() {
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: selected.includes(brand) }}
                 onPress={() => toggle(brand)}
-                style={[styles.tile, selected.includes(brand) && styles.tileSelected]}>
+                style={[
+                  styles.tile,
+                  { width: tileWidth },
+                  selected.includes(brand) && styles.tileSelected,
+                ]}>
                 <Text style={styles.tileText} numberOfLines={3}>
                   {brand}
                 </Text>
@@ -82,18 +91,17 @@ const styles = StyleSheet.create({
   },
   grid: {
     flex: 1,
-    width: 275,
     marginTop: 23,
   },
   gridContent: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     rowGap: 16,
-    columnGap: 25,
+    columnGap: GRID_GAP,
   },
   tile: {
-    width: 125,
     height: 109,
+    paddingHorizontal: 4,
     borderWidth: 3,
     borderColor: 'transparent',
     borderRadius: 12,
@@ -105,7 +113,6 @@ const styles = StyleSheet.create({
     borderColor: Palette.purple[600],
   },
   tileText: {
-    width: 103,
     color: Palette.black,
     fontSize: 16,
     lineHeight: 19,
