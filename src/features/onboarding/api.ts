@@ -1,4 +1,4 @@
-import { openSettlements } from '@/lib/settlements';
+import { openSettlements, type Settlement } from '@/lib/settlements';
 import { ensureSignedIn, supabase, unwrap } from '@/lib/supabase';
 
 /**
@@ -16,4 +16,20 @@ export async function fetchBrands() {
 export async function saveBrands(brands: string[]) {
   const user = await ensureSignedIn();
   unwrap(await supabase.from('profiles').upsert({ user_id: user.id, brands }));
+}
+
+/**
+ * Adds up the most one person can get from the open settlements of the brands they picked.
+ * Settlements whose payout "varies" have no top amount, so they count toward `count` only.
+ */
+export async function estimatePayout() {
+  const user = await ensureSignedIn();
+  const profile = unwrap<{ brands: string[] } | null>(
+    await supabase.from('profiles').select('brands').eq('user_id', user.id).maybeSingle(),
+  );
+  const brands = profile?.brands ?? [];
+  if (brands.length === 0) return { total: 0, count: 0 };
+
+  const rows = unwrap<Pick<Settlement, 'payout_max'>[]>(await openSettlements().in('brand', brands));
+  return { total: rows.reduce((sum, row) => sum + (row.payout_max ?? 0), 0), count: rows.length };
 }
