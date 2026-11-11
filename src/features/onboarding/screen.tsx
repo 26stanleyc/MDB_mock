@@ -12,7 +12,7 @@ export default function OnboardingScreen() {
     <OnboardingBackground>
       <View style={styles.logoSection}>
         <Image
-          source={require('@/assets/images/onboarding/logo.png')}
+          source={require('@/assets/images/onboarding/logo.svg')}
           style={styles.logo}
           contentFit="contain"
           accessibilityLabel="Mode Mobile"

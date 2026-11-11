@@ -31,7 +31,7 @@ export default function TotalScreen() {
       nextLabel="Claim My Cash"
       contentStyle={styles.content}>
       <Image
-        source={require('@/assets/images/onboarding/logo.png')}
+        source={require('@/assets/images/onboarding/logo.svg')}
         style={styles.logo}
         contentFit="contain"
         accessibilityLabel="Mode Mobile"

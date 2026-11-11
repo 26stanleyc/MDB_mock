@@ -6,7 +6,7 @@ import { Palette } from '@/constants/theme';
 
 import { OnboardingStep, StepBody, StepTitle } from './components/onboarding-step';
 
-const LOGO = require('@/assets/images/onboarding/logo.png');
+const LOGO = require('@/assets/images/onboarding/logo.svg');
 
 export default function TrackScreen() {
   return (

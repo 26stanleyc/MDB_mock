@@ -14,7 +14,7 @@ export function AppHeader({ title, titleStyle, onMenu }: AppHeaderProps) {
   return (
     <View style={styles.bar}>
       <Image
-        source={require('@/assets/images/onboarding/logo.png')}
+        source={require('@/assets/images/onboarding/logo.svg')}
         style={styles.logo}
         contentFit="contain"
         accessibilityLabel="Mode Mobile"
